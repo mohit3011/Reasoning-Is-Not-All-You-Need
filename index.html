@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+        content="Reasoning Is Not All You Need: Examining LLMs for Multi-Turn Mental Health Conversations. ACL 2026 main-conference paper introducing MedAgent, the MHSD dataset, and MultiSenseEval.">
+  <meta name="keywords" content="ACL 2026, LLM, Mental Health, Multi-Turn Dialogue, Sensemaking, MedAgent, MHSD, MultiSenseEval, DeepSeek-R1, OpenAI o1, Reasoning Models">
+  <title>Reasoning Is Not All You Need — Examining LLMs for Multi-Turn Mental Health Conversations · ACL 2026</title>
+
+  <link rel="icon" href="./media/static/images/favicon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Noto+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.4/css/academicons.min.css">
+
+  <style>
+    /* ============================================================
+       Global tokens — adapted from UnifiedSD.github.io
+       ============================================================ */
+    :root {
+      --primary-1: #667eea;
+      --primary-2: #764ba2;
+      --accent-1: #f59e0b;
+      --accent-2: #ef4444;
+      --accent-pink: #ec4899;
+      --teal-1: #11998e;
+      --teal-2: #38ef7d;
+      --ink: #1f2937;
+      --ink-soft: #4b5563;
+      --ink-xsoft: #6b7280;
+      --paper: #ffffff;
+      --tint: #f5f7ff;
+      --tint-pink: #fff5f8;
+      --border: #e5e7eb;
+      --border-soft: #f0f1f6;
+      --radius-card: 16px;
+      --radius-card-lg: 20px;
+      --shadow-card: 0 4px 16px rgba(31, 41, 55, 0.06), 0 1px 4px rgba(31, 41, 55, 0.04);
+      --shadow-card-hover: 0 16px 36px rgba(102, 126, 234, 0.18), 0 4px 12px rgba(31, 41, 55, 0.06);
+      --transition-lift: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    }
+
+    html { scroll-behavior: smooth; }
+    /* offset sticky nav for in-page anchors */
+    section[id] { scroll-margin-top: 72px; }
+    body {
+      font-family: 'Noto Sans', system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: #f9fafc;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.55;
+    }
+    .display-font, h1, h2, h3, h4, h5, .title { font-family: 'Google Sans', sans-serif; letter-spacing: -0.01em; }
+
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* ============================================================
+       Sticky glass nav
+       ============================================================ */
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: saturate(200%) blur(14px);
+      -webkit-backdrop-filter: saturate(200%) blur(14px);
+      background: rgba(255, 255, 255, 0.82);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-family: 'Google Sans', sans-serif;
+      background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 1.05rem;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .nav-brand .brand-icon {
+      width: 26px; height: 26px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+      color: #fff;
+      font-size: 0.78rem;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.30);
+      -webkit-text-fill-color: #fff;
+    }
+    .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+    .nav-links a {
+      color: var(--ink-soft);
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 6px 11px;
+      border-radius: 8px;
+      transition: color 0.18s ease, background 0.18s ease;
+    }
+    .nav-links a:hover { color: var(--primary-2); background: rgba(102, 126, 234, 0.08); }
+
+    /* ============================================================
+       Keyboard focus rings — consistent, brand-colored
+       ============================================================ */
+    :focus-visible {
+      outline: 2.5px solid var(--primary-1);
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+    /* Wider target for nav links */
+    .nav-links a:focus-visible, .hero-btn:focus-visible, .footer a:focus-visible {
+      outline-offset: 4px;
+    }
+
+    /* ============================================================
+       :target — highlight targeted section with a subtle top glow
+       ============================================================ */
+    section[id]:target {
+      outline: none;
+    }
+    section[id]:target .section-head h2 .em {
+      text-decoration: underline;
+      text-decoration-color: rgba(102, 126, 234, 0.35);
+      text-underline-offset: 5px;
+      text-decoration-thickness: 2px;
+    }
+    /* Nav link "current" underline dot for :target state */
+    .nav-links a { position: relative; }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 2px; left: 50%; transform: translateX(-50%);
+      width: 0; height: 3px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--primary-1), var(--primary-2));
+      transition: width 0.2s ease;
+    }
+    .nav-links a:hover::after { width: 60%; }
+
+    /* ============================================================
+       Hero
+       ============================================================ */
+    .hero-section {
+      position: relative;
+      overflow: hidden;
+      padding: 78px 24px 64px;
+      background:
+        radial-gradient(ellipse 1100px 440px at 78% -5%, rgba(118, 75, 162, 0.14) 0%, transparent 60%),
+        radial-gradient(ellipse 820px 460px at 5% 15%, rgba(102, 126, 234, 0.13) 0%, transparent 60%),
+        radial-gradient(ellipse 700px 380px at 50% 110%, rgba(236, 72, 153, 0.10) 0%, transparent 65%),
+        linear-gradient(180deg, #ffffff 0%, #f5f7ff 100%);
+    }
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(1.8px 1.8px at 20% 30%, rgba(102, 126, 234, 0.30) 50%, transparent 51%),
+        radial-gradient(1.8px 1.8px at 80% 70%, rgba(118, 75, 162, 0.25) 50%, transparent 51%),
+        radial-gradient(1.4px 1.4px at 58% 18%, rgba(245, 158, 11, 0.25) 50%, transparent 51%),
+        radial-gradient(1.4px 1.4px at 32% 82%, rgba(236, 72, 153, 0.22) 50%, transparent 51%);
+      background-size: 220px 220px, 260px 260px, 180px 180px, 240px 240px;
+      animation: floatPattern 22s linear infinite;
+      opacity: 0.40;
+      pointer-events: none;
+    }
+    @keyframes floatPattern {
+      0%   { background-position: 0 0, 0 0, 0 0, 0 0; }
+      100% { background-position: 220px 220px, -260px 260px, 180px -180px, -240px 240px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-section::before { animation: none; }
+      html { scroll-behavior: auto; }
+    }
+    .hero-inner { position: relative; max-width: 1040px; margin: 0 auto; text-align: center; }
+
+    .venue-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px 8px 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.10), rgba(118, 75, 162, 0.10));
+      border: 1.5px solid rgba(118, 75, 162, 0.30);
+      color: var(--primary-2);
+      font-family: 'Google Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.92rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 26px;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.14);
+    }
+    .venue-banner .dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.22);
+      flex-shrink: 0;
+    }
+
+    .paper-title {
+      font-size: 2.45rem;
+      line-height: 1.18;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      max-width: 940px;
+      margin: 0 auto 14px;
+      background: linear-gradient(150deg, #1a2130 28%, #5b42a8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .paper-title .accent {
+      background: linear-gradient(135deg, var(--accent-pink) 0%, var(--primary-2) 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-style: italic;
+    }
+
+    .authors {
+      max-width: 880px;
+      margin: 16px auto 8px;
+      font-size: 1.04rem;
+      color: var(--ink);
+      line-height: 1.7;
+    }
+    .authors a {
+      color: var(--ink);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.18s ease;
+    }
+    .authors a:hover { border-bottom-color: var(--primary-2); }
+    .authors sup { color: var(--primary-2); font-weight: 600; }
+    .author-marks {
+      margin-top: 4px;
+      color: var(--ink-xsoft);
+      font-size: 0.88rem;
+    }
+
+    .affiliation-row {
+      display: flex; justify-content: center; align-items: center; gap: 14px;
+      flex-wrap: wrap;
+      margin: 22px auto 0;
+      color: var(--ink-soft);
+      font-size: 0.98rem;
+    }
+    .affiliation-row img { height: 42px; width: auto; }
+
+    .hero-actions {
+      display: flex; justify-content: center; flex-wrap: wrap; gap: 12px;
+      margin: 30px auto 0;
+    }
+    .hero-btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 11px 22px;
+      border-radius: 999px;
+      font-family: 'Google Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.94rem;
+      text-decoration: none;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    }
+    .hero-btn.primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+      box-shadow: 0 10px 24px rgba(102, 126, 234, 0.28);
+    }
+    .hero-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(102, 126, 234, 0.36); }
+    .hero-btn.ghost {
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--border);
+    }
+    .hero-btn.ghost:hover { transform: translateY(-2px); border-color: var(--primary-2); color: var(--primary-2); box-shadow: 0 10px 24px rgba(31, 41, 55, 0.08); }
+    .hero-btn.disabled { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
+
+    .stats-strip {
+      margin: 44px auto 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      max-width: 960px;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 18px 16px;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+      transition: var(--transition-lift);
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card-hover); border-color: rgba(102, 126, 234, 0.30); }
+    .stat-number {
+      font-family: 'Google Sans', sans-serif;
+      font-size: 1.85rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .stat-card.accent .stat-number {
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-card.teal .stat-number {
+      background: linear-gradient(135deg, var(--teal-1), var(--teal-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label { margin-top: 6px; font-size: 0.84rem; color: var(--ink-xsoft); letter-spacing: 0.02em; }
+
+    /* ============================================================
+       Sections
+       ============================================================ */
+    .section { padding: 60px 24px; }
+    .section.alt { background: linear-gradient(180deg, #f9fafc 0%, #f5f7ff 100%); }
+    .section h2 {
+      font-size: 1.85rem;
+      margin: 0 0 8px;
+      letter-spacing: -0.015em;
+      color: var(--ink);
+    }
+    .section h2 .em {
+      background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .section .lede {
+      max-width: 820px;
+      margin: 0 auto 28px;
+      color: var(--ink-soft);
+      font-size: 1.02rem;
+      text-align: center;
+    }
+    .section .section-head { text-align: center; margin-bottom: 28px; }
+    .section .eyebrow {
+      display: inline-block;
+      font-family: 'Google Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--primary-2);
+      margin-bottom: 8px;
+    }
+
+    .figure-wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+    }
+    .figure-wrap img { width: 100%; height: auto; display: block; border-radius: 8px; }
+    .figure-caption {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: var(--ink-xsoft);
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    /* ============================================================
+       Abstract
+       ============================================================ */
+    .abstract-card {
+      max-width: 880px;
+      margin: 0 auto;
+      background: var(--paper);
+      border-radius: var(--radius-card-lg);
+      padding: 36px 40px;
+      box-shadow: var(--shadow-card), 0 -2px 0 0 rgba(102, 126, 234, 0.08);
+      border-top: 4px solid;
+      border-image: linear-gradient(135deg, var(--primary-1), var(--primary-2)) 1;
+      /* Subtle interior top-gradient wash */
+      background-image: linear-gradient(180deg, rgba(102, 126, 234, 0.035) 0%, transparent 48px);
+    }
+    .abstract-card p { margin: 0; text-align: left; color: var(--ink); font-size: 1.0rem; line-height: 1.75; }
+
+    /* ============================================================
+       Feature cards
+       ============================================================ */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--paper);
+      border-radius: var(--radius-card);
+      padding: 28px 24px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      transition: var(--transition-lift);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+    }
+    .feature-card.accent-pink::before { background: linear-gradient(135deg, var(--accent-pink), var(--accent-2)); }
+    .feature-card.accent-teal::before { background: linear-gradient(135deg, var(--teal-1), var(--teal-2)); }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-card-hover); }
+    .feature-icon {
+      font-size: 2.0rem;
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.10), rgba(118, 75, 162, 0.14));
+      color: var(--primary-2);
+      margin-bottom: 16px;
+    }
+    .feature-card.accent-pink .feature-icon {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.10), rgba(239, 68, 68, 0.14));
+      color: var(--accent-pink);
+    }
+    .feature-card.accent-teal .feature-icon {
+      background: linear-gradient(135deg, rgba(17, 153, 142, 0.10), rgba(56, 239, 125, 0.18));
+      color: var(--teal-1);
+    }
+    .feature-card h3 { font-size: 1.15rem; margin: 0 0 8px; color: var(--ink); }
+    .feature-card p { margin: 0; color: var(--ink-soft); font-size: 0.95rem; }
+
+    /* ============================================================
+       Methodology steps
+       ============================================================ */
+    .step-grid { display: grid; grid-template-columns: 1fr; gap: 22px; max-width: 1040px; margin: 0 auto; }
+    .step-card {
+      background: var(--paper);
+      border-radius: var(--radius-card-lg);
+      padding: 28px 32px;
+      box-shadow: var(--shadow-card);
+      border-left: 5px solid var(--primary-2);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .step-card.with-figure { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: center; }
+    .step-card.with-figure.flip { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
+    .step-card.with-figure.flip .step-body { order: 2; }
+    .step-card.with-figure.flip .step-figure { order: 1; }
+    .step-card .step-tag {
+      display: inline-block;
+      font-family: 'Google Sans', sans-serif;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--primary-2);
+      background: rgba(102, 126, 234, 0.10);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+    .step-card h3 { font-size: 1.32rem; margin: 0 0 10px; }
+    .step-card p { color: var(--ink-soft); font-size: 0.97rem; line-height: 1.7; margin: 0 0 10px; }
+    .step-card ul { color: var(--ink-soft); font-size: 0.95rem; margin: 8px 0 0 20px; padding: 0; }
+    .step-card ul li { margin-bottom: 6px; line-height: 1.6; }
+    .step-figure {
+      background: linear-gradient(160deg, #fafbff, #f1f3ff);
+      border-radius: 14px;
+      padding: 12px;
+      border: 1px solid var(--border-soft);
+    }
+    .step-figure img { width: 100%; height: auto; display: block; border-radius: 8px; }
+
+    /* ============================================================
+       Persona cards (Big Five)
+       ============================================================ */
+    .persona-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+    .persona-card {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 22px 20px;
+      transition: var(--transition-lift);
+      position: relative;
+      overflow: hidden;
+    }
+    .persona-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--primary-1), var(--primary-2));
+    }
+    .persona-card:nth-child(1)::before { background: linear-gradient(180deg, #667eea, #764ba2); }
+    .persona-card:nth-child(2)::before { background: linear-gradient(180deg, #11998e, #38ef7d); }
+    .persona-card:nth-child(3)::before { background: linear-gradient(180deg, #f59e0b, #ef4444); }
+    .persona-card:nth-child(4)::before { background: linear-gradient(180deg, #ec4899, #764ba2); }
+    .persona-card:nth-child(5)::before { background: linear-gradient(180deg, #38bdf8, #6366f1); }
+    .persona-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card-hover); }
+    /* Per-trait accent tint on hover — each maps to the card's left-border gradient */
+    .persona-card:nth-child(1):hover { background: linear-gradient(160deg, #fff 60%, rgba(102, 126, 234, 0.07)); border-color: rgba(102, 126, 234, 0.25); }
+    .persona-card:nth-child(2):hover { background: linear-gradient(160deg, #fff 60%, rgba(17, 153, 142, 0.07));  border-color: rgba(17, 153, 142, 0.25); }
+    .persona-card:nth-child(3):hover { background: linear-gradient(160deg, #fff 60%, rgba(245, 158, 11, 0.07));  border-color: rgba(245, 158, 11, 0.25); }
+    .persona-card:nth-child(4):hover { background: linear-gradient(160deg, #fff 60%, rgba(236, 72, 153, 0.07));  border-color: rgba(236, 72, 153, 0.25); }
+    .persona-card:nth-child(5):hover { background: linear-gradient(160deg, #fff 60%, rgba(56, 189, 248, 0.07));  border-color: rgba(99, 102, 241, 0.25); }
+    .persona-card h4 { margin: 0 0 8px; font-size: 1.05rem; color: var(--ink); }
+    .persona-card .def { color: var(--ink-xsoft); font-size: 0.86rem; margin-bottom: 10px; }
+    .persona-card .styleline { font-size: 0.88rem; color: var(--ink-soft); margin-bottom: 4px; }
+    .persona-card .styleline b { color: var(--ink); }
+
+    /* ============================================================
+       Eval axes
+       ============================================================ */
+    .eval-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+    .eval-card {
+      background: var(--paper);
+      border-radius: var(--radius-card);
+      padding: 22px 20px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-card);
+      transition: var(--transition-lift);
+    }
+    .eval-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card-hover); border-color: rgba(102, 126, 234, 0.30); }
+    .eval-card .axis-num {
+      font-family: 'Google Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+      color: var(--primary-2);
+      letter-spacing: 0.15em;
+    }
+    .eval-card h4 { margin: 6px 0 6px; font-size: 1.05rem; color: var(--ink); }
+    .eval-card p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+
+    /* Category color-coding for eval axes */
+    .eval-card { border-top: 3px solid transparent; }
+    /* Patient-centric (Axes 01–03): purple */
+    .eval-card.cat-patient { border-top-color: var(--primary-1); }
+    .eval-card.cat-patient .axis-num { color: var(--primary-2); }
+    .eval-card.cat-patient:hover { border-color: rgba(102, 126, 234, 0.35); border-top-color: var(--primary-1); }
+    /* Diagnostic (Axis 04): amber-red */
+    .eval-card.cat-diagnostic { border-top-color: var(--accent-1); }
+    .eval-card.cat-diagnostic .axis-num { color: #d97706; }
+    .eval-card.cat-diagnostic:hover { border-color: rgba(245, 158, 11, 0.30); border-top-color: var(--accent-1); }
+    /* Flow (Axis 05): teal */
+    .eval-card.cat-flow { border-top-color: var(--teal-1); }
+    .eval-card.cat-flow .axis-num { color: var(--teal-1); }
+    .eval-card.cat-flow:hover { border-color: rgba(17, 153, 142, 0.30); border-top-color: var(--teal-1); }
+    /* Readability (Axis 06): pink */
+    .eval-card.cat-read { border-top-color: var(--accent-pink); }
+    .eval-card.cat-read .axis-num { color: #be185d; }
+    .eval-card.cat-read:hover { border-color: rgba(236, 72, 153, 0.30); border-top-color: var(--accent-pink); }
+
+    /* Category label badge */
+    .eval-cat-label {
+      display: inline-block;
+      font-family: 'Google Sans', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+    .cat-patient .eval-cat-label  { background: rgba(102, 126, 234, 0.10); color: var(--primary-2); }
+    .cat-diagnostic .eval-cat-label { background: rgba(245, 158, 11, 0.12); color: #b45309; }
+    .cat-flow .eval-cat-label       { background: rgba(17, 153, 142, 0.10); color: var(--teal-1); }
+    .cat-read .eval-cat-label        { background: rgba(236, 72, 153, 0.10); color: #be185d; }
+
+    /* ============================================================
+       Metric cards (big numbers)
+       ============================================================ */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 1040px;
+      margin: 0 auto 36px;
+    }
+    .metric-card {
+      background: var(--paper);
+      border-radius: var(--radius-card);
+      padding: 22px 18px;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      transition: var(--transition-lift);
+    }
+    .metric-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card-hover); }
+    .metric-card .num {
+      font-family: 'Google Sans', sans-serif;
+      font-size: 2.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .metric-card.warn .num {
+      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .metric-card.teal .num {
+      background: linear-gradient(135deg, var(--teal-1), var(--teal-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .metric-card .lbl { margin-top: 8px; color: var(--ink-xsoft); font-size: 0.85rem; line-height: 1.4; }
+
+    /* ============================================================
+       Highlight callouts
+       ============================================================ */
+    .callout {
+      max-width: 940px;
+      margin: 22px auto;
+      background: linear-gradient(135deg, #fafbff, #fff5f8);
+      border: 1px solid rgba(118, 75, 162, 0.20);
+      border-left: 5px solid var(--primary-2);
+      border-radius: 14px;
+      padding: 20px 24px;
+      box-shadow: var(--shadow-card);
+    }
+    .callout.warn {
+      background: linear-gradient(135deg, #fffaf2, #fff5f8);
+      border-color: rgba(239, 68, 68, 0.20);
+      border-left-color: var(--accent-2);
+    }
+    .callout h4 { margin: 0 0 6px; font-size: 1.02rem; color: var(--ink); }
+    .callout p { margin: 0; color: var(--ink-soft); font-size: 0.95rem; line-height: 1.6; }
+
+    /* ============================================================
+       Data table
+       ============================================================ */
+    .data-table-wrap {
+      max-width: 760px;
+      margin: 28px auto 0;
+      background: var(--paper);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    table.data-table thead {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.10), rgba(118, 75, 162, 0.10));
+    }
+    table.data-table th,
+    table.data-table td {
+      padding: 11px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    table.data-table th { color: var(--ink); font-family: 'Google Sans', sans-serif; font-weight: 600; }
+    table.data-table tbody tr:last-child td { border-bottom: none; font-weight: 600; background: rgba(102, 126, 234, 0.04); }
+    table.data-table td.num, table.data-table th.num { text-align: center; font-family: 'JetBrains Mono', monospace; }
+
+    /* ============================================================
+       Conversation bubbles
+       ============================================================ */
+    .conversation {
+      max-width: 940px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--paper);
+      padding: 28px;
+      border-radius: var(--radius-card-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-card);
+    }
+    .turn { display: flex; gap: 12px; align-items: flex-start; }
+    .turn.sensemaker { justify-content: flex-end; }
+    .bubble {
+      max-width: 70%;
+      padding: 14px 16px;
+      border-radius: 16px;
+      font-size: 0.94rem;
+      line-height: 1.55;
+      position: relative;
+    }
+    .bubble .stage-pill {
+      display: inline-block;
+      font-family: 'Google Sans', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+      color: var(--ink);
+      background: rgba(0, 0, 0, 0.06);
+    }
+    .bubble.patient {
+      background: #f1f3ff;
+      border: 1px solid #e0e7ff;
+      color: var(--ink);
+      border-top-left-radius: 4px;
+    }
+    .bubble.sm-relate    { background: #f3f4f6; border: 1px solid #e5e7eb; }
+    .bubble.sm-gather    { background: #fef2f2; border: 1px solid #fecaca; }
+    .bubble.sm-provide   { background: #f5f3ff; border: 1px solid #e9d5ff; }
+    .bubble.sm-decide    { background: #ecfdf5; border: 1px solid #bbf7d0; }
+    .bubble.sm-emote     { background: #fff7ed; border: 1px solid #fed7aa; }
+    .bubble.sm-relate .stage-pill   { background: #e5e7eb; color: #374151; }
+    .bubble.sm-gather .stage-pill   { background: #fee2e2; color: #b91c1c; }
+    .bubble.sm-provide .stage-pill  { background: #ede9fe; color: #6d28d9; }
+    .bubble.sm-decide .stage-pill   { background: #d1fae5; color: #047857; }
+    .bubble.sm-emote .stage-pill    { background: #ffedd5; color: #c2410c; }
+    .bubble.sensemaker-side { border-top-right-radius: 4px; }
+    .avatar {
+      width: 32px; height: 32px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      box-shadow: 0 4px 10px rgba(102, 126, 234, 0.24);
+    }
+    .avatar.user { background: linear-gradient(135deg, #ec4899, #764ba2); box-shadow: 0 4px 10px rgba(236, 72, 153, 0.24); }
+    .avatar.sm { background: linear-gradient(135deg, #11998e, #38ef7d); box-shadow: 0 4px 10px rgba(17, 153, 142, 0.24); }
+
+    /* ============================================================
+       BibTeX
+       ============================================================ */
+    .bibtex-wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: var(--radius-card);
+      padding: 22px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+    }
+    .bibtex-wrap pre { margin: 0; white-space: pre; }
+    .bibtex-wrap .kw { color: #a78bfa; }
+    .bibtex-wrap .field { color: #93c5fd; }
+    .bibtex-wrap .val { color: #fcd34d; }
+
+    /* ============================================================
+       Footer
+       ============================================================ */
+    .footer {
+      background: #0f172a;
+      color: #cbd5e1;
+      padding: 40px 24px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    .footer a { color: #93c5fd; text-decoration: none; border-bottom: 1px solid rgba(147, 197, 253, 0.3); }
+    .footer a:hover { border-bottom-color: #93c5fd; }
+    .footer .footer-row + .footer-row { margin-top: 10px; }
+
+    /* ============================================================
+       Responsive
+       ============================================================ */
+    @media (max-width: 900px) {
+      .feature-grid { grid-template-columns: 1fr; }
+      .step-card.with-figure,
+      .step-card.with-figure.flip { grid-template-columns: 1fr; }
+      .step-card.with-figure.flip .step-body { order: 1; }
+      .step-card.with-figure.flip .step-figure { order: 2; }
+      .stats-strip { grid-template-columns: repeat(2, 1fr); }
+      .metric-grid { grid-template-columns: repeat(2, 1fr); }
+      .eval-grid { grid-template-columns: repeat(2, 1fr); }
+      .paper-title { font-size: 1.9rem; }
+    }
+    @media (max-width: 600px) {
+      .hero-section { padding: 56px 16px 48px; }
+      .paper-title { font-size: 1.5rem; line-height: 1.28; }
+      .nav-links { display: none; }
+      .stats-strip { grid-template-columns: 1fr 1fr; }
+      .metric-grid { grid-template-columns: 1fr 1fr; }
+      .eval-grid { grid-template-columns: 1fr; }
+      .abstract-card { padding: 28px 22px; }
+      .step-card { padding: 22px 20px; }
+      .bubble { max-width: 86%; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     Sticky Nav
+     ============================================================ -->
+<nav class="topnav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#top">
+      <span class="brand-icon"><i class="fas fa-stethoscope"></i></span>
+      <span>MedAgent · ACL 2026</span>
+    </a>
+    <div class="nav-links">
+      <a href="#abstract">Abstract</a>
+      <a href="#framework">Framework</a>
+      <a href="#dataset">Dataset</a>
+      <a href="#evaluation">Evaluation</a>
+      <a href="#results">Results</a>
+      <a href="#conversation">Sample</a>
+      <a href="#bibtex">BibTeX</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================
+     Hero
+     ============================================================ -->
+<section id="top" class="hero-section">
+  <div class="hero-inner">
+    <div class="venue-banner">
+      <span class="dot"></span>
+      <span>ACL 2026 · Main Track</span>
+    </div>
+
+    <h1 class="paper-title">
+      <span class="accent">Reasoning Is Not All You Need:</span><br>
+      Examining LLMs for Multi-Turn Mental Health Conversations
+    </h1>
+
+    <div class="authors">
+      <a href="https://mohit3011.github.io/">Mohit Chandra</a><sup>1,*</sup>,
+      <a href="https://sid-sr.github.io/">Siddharth Sriraman</a><sup>1,*</sup>,
+      <a href="https://www.linkedin.com/in/harneet-singh-khanuja-5a2261142/">Harneet Singh Khanuja</a><sup>1</sup>,
+      <a href="https://ahren09.github.io/">Yiqiao Jin</a><sup>1</sup>,
+      <a href="http://www.munmund.net/">Munmun De Choudhury</a><sup>1</sup>
+      <div class="author-marks"><sup>1</sup> Georgia Institute of Technology &nbsp;·&nbsp; <sup>*</sup> Equal contribution</div>
+    </div>
+
+    <div class="affiliation-row">
+      <img src="./media/static/images/GeorgiaTech.png" alt="Georgia Institute of Technology">
+      <span>Georgia Institute of Technology</span>
+    </div>
+
+    <div class="hero-actions">
+      <a class="hero-btn ghost" href="https://arxiv.org/abs/2505.20201" title="arXiv">
+        <i class="ai ai-arxiv"></i>
+        <i class="fas fa-file-pdf"></i>
+        <span>arXiv</span>
+      </a>
+      <a class="hero-btn primary" href="https://github.com/mohit3011/Reasoning-Is-Not-All-You-Need" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+        <span>Code &amp; Dataset</span>
+      </a>
+      <a class="hero-btn ghost" href="#" title="">
+        <i class="fas fa-database"></i>
+        <span>MHSD on HuggingFace 🤗</span>
+      </a>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-number">2,284</div>
+        <div class="stat-label">Multi-turn Conversations (MHSD)</div>
+      </div>
+      <div class="stat-card teal">
+        <div class="stat-number">6</div>
+        <div class="stat-label">MultiSenseEval Axes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">2</div>
+        <div class="stat-label">Frontier Reasoning LLMs Evaluated</div>
+      </div>
+      <div class="stat-card accent">
+        <div class="stat-number">~31%</div>
+        <div class="stat-label">Hard Diagnostic Accuracy (both)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Abstract
+     ============================================================ -->
+<section id="abstract" class="section">
+  <div class="section-head">
+    <div class="eyebrow">Paper</div>
+    <h2><span class="em">Abstract</span></h2>
+  </div>
+  <div class="abstract-card">
+    <p>
+      Limited access to mental healthcare, extended wait times, and increasing capabilities of Large Language Models (LLMs) has led individuals to turn to LLMs for fulfilling their mental health needs. However, examining the multi-turn mental health conversation capabilities of LLMs remains under-explored. Existing evaluation frameworks typically focus on diagnostic accuracy and win-rates and often overlook alignment with patient-specific goals, values, and personalities required for meaningful conversations. To address this, we introduce MedAgent, a novel framework for synthetically generating realistic, multi-turn mental health sensemaking conversations and use it to create the Mental Health Sensemaking Dialogue (MHSD) dataset, comprising over 2,200 patient&ndash;LLM conversations. Additionally, we present MultiSenseEval, a holistic framework to evaluate the multi-turn conversation abilities of LLMs in healthcare settings using human-centric criteria. Our findings reveal that frontier reasoning models yield below-par performance for patient-centric communication and struggle at precise (&ldquo;hard&rdquo;) diagnostic capabilities with average accuracy of &sim;31%. Additionally, we observed variation in model performance based on patient's persona and performance drop with increasing turns in the conversation. Our work provides a comprehensive synthetic data generation framework, a dataset and evaluation framework for assessing LLMs in multi-turn mental health conversations.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================
+     TL;DR / Key Contributions
+     ============================================================ -->
+<section class="section alt">
+  <div class="section-head">
+    <div class="eyebrow">What's New</div>
+    <h2>Three contributions, one <span class="em">end-to-end pipeline</span></h2>
+    <p class="lede">A model-agnostic conversation generator, a 2,284-conversation dataset, and a six-axis evaluation framework grounded in clinical-communication theory.</p>
+  </div>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fas fa-puzzle-piece"></i></div>
+      <h3>MedAgent Framework</h3>
+      <p>A model-agnostic, two-actor pipeline that grounds patient personas in real clinical case studies and structures sensemaker behavior over a five-stage clinical-communication scaffold.</p>
+    </div>
+    <div class="feature-card accent-pink">
+      <div class="feature-icon"><i class="fas fa-comments"></i></div>
+      <h3>MHSD Dataset</h3>
+      <p>2,284 synthetic patient–LLM conversations covering 181 MedQA-derived mental-health case studies replayed across five Big Five trait variations (one trait dialed High at a time), two health-literacy levels, three intents, and three goals.</p>
+    </div>
+    <div class="feature-card accent-teal">
+      <div class="feature-icon"><i class="fas fa-ruler-combined"></i></div>
+      <h3>MultiSenseEval</h3>
+      <p>Six-axis evaluation: Perceived Susceptibility, Perceived Severity, Perceived Benefits, Diagnostic Accuracy (Hard / Soft), Flow &amp; Correctness, and Readability (SMOG). Validated by domain-expert annotators.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Overview Figure
+     ============================================================ -->
+<section class="section">
+  <div class="section-head">
+    <div class="eyebrow">System Overview</div>
+    <h2>From a clinical case study to a <span class="em">multi-turn sensemaking conversation</span></h2>
+  </div>
+  <div class="figure-wrap">
+    <img src="./media/figures/overview.png" alt="MedAgent and MultiSenseEval overview">
+    <div class="figure-caption">
+      <b>Figure 1.</b> <b>(a)</b> The MedAgent framework generates multi-turn mental-health sensemaking conversations between a Patient Actor LLM and a Sensemaker Actor LLM. <b>(b)</b> MultiSenseEval evaluates conversations across patient-centric communication, conversational flow and correctness, diagnostic accuracy, and readability.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Framework
+     ============================================================ -->
+<section id="framework" class="section alt">
+  <div class="section-head">
+    <div class="eyebrow">Framework</div>
+    <h2>Two cooperating actors, <span class="em">grounded in clinical theory</span></h2>
+    <p class="lede">Patient personas are dialed via Big-Five traits, health literacy, intent, and goals. Sensemaker behavior is organized around the <em>6-function model</em> of medical communication.</p>
+  </div>
+
+  <div class="step-grid">
+    <div class="step-card with-figure">
+      <div class="step-body">
+        <span class="step-tag">Module 1</span>
+        <h3>Patient Actor LLM</h3>
+        <p>The patient is built from <b>atomic medical facts</b> distilled from MedQA case studies, then layered with a structured persona. Each turn retrieves only the facts relevant to the sensemaker's prompt, then re-styles them through the persona's tone.</p>
+        <ul>
+          <li><b>Personality</b> — Big Five trait dialed one at a time to avoid contradictory mixes.</li>
+          <li><b>Health Literacy</b> — <i>Basic</i> or <i>Advanced</i>, shaping vocabulary and detail.</li>
+          <li><b>Intent</b> — what the user came for (e.g. interpretation, lifestyle advice).</li>
+          <li><b>Goal</b> — Comfort-focused, Maintain/Improve Function, or Life Extension.</li>
+        </ul>
+      </div>
+      <div class="step-figure">
+        <img src="./media/figures/patient_module.png" alt="Patient Actor module">
+      </div>
+    </div>
+
+    <div class="step-card with-figure flip">
+      <div class="step-body">
+        <span class="step-tag">Module 2</span>
+        <h3>Sensemaker Actor LLM</h3>
+        <p>The sensemaker organizes each conversation across <b>five clinical-communication stages</b>, grounded in the <em>6-function model of medical communication</em> (de Haes &amp; Bensing; King &amp; Hoppe): Fostering the Relationship → Gathering Information → Providing Information → Decision Making → Responding to Emotions. A hard cap of 5 turns per stage prevents stagnation.</p>
+        <ul>
+          <li><b>Next Stage Determination</b> — advances or holds based on accumulated facts.</li>
+          <li><b>Fact Extraction &amp; Matching</b> — incrementally builds a patient memory.</li>
+          <li><b>Message Generation</b> — produces 3 stage-appropriate candidates.</li>
+          <li><b>Redundancy Selector</b> — filters semantically duplicate replies.</li>
+        </ul>
+      </div>
+      <div class="step-figure">
+        <img src="./media/figures/sensemaker_module.png" alt="Sensemaker Actor module">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Big Five Persona grid
+     ============================================================ -->
+<section class="section">
+  <div class="section-head">
+    <div class="eyebrow">Personas</div>
+    <h2>Five Big-Five dials, <span class="em">five conversation styles</span></h2>
+    <p class="lede">Each case study is replayed five times — one personality trait dialed High at a time — yielding stable, internally-consistent simulated patients.</p>
+  </div>
+
+  <div class="persona-grid">
+    <div class="persona-card">
+      <h4>Openness</h4>
+      <div class="def">Imagination, curiosity, comfort with novel ideas.</div>
+      <div class="styleline"><b>High:</b> Asks <i>why</i>/<i>how</i>, explores alternatives.</div>
+      <div class="styleline"><b>Low:</b> Prefers familiar terms, concrete instructions.</div>
+    </div>
+    <div class="persona-card">
+      <h4>Conscientiousness</h4>
+      <div class="def">Organization, self-discipline, goal-orientation.</div>
+      <div class="styleline"><b>High:</b> Brings detailed symptom logs, seeks precise steps.</div>
+      <div class="styleline"><b>Low:</b> Vague histories, prefers simplified plans.</div>
+    </div>
+    <div class="persona-card">
+      <h4>Extraversion</h4>
+      <div class="def">Sociability, talkativeness, expressiveness.</div>
+      <div class="styleline"><b>High:</b> Rich detail, small talk, frequent questions.</div>
+      <div class="styleline"><b>Low:</b> Succinct answers, prefers structured questioning.</div>
+    </div>
+    <div class="persona-card">
+      <h4>Agreeableness</h4>
+      <div class="def">Cooperation, trust, prosocial orientation.</div>
+      <div class="styleline"><b>High:</b> Readily agrees; may conceal doubts.</div>
+      <div class="styleline"><b>Low:</b> Challenges recommendations, negotiates choices.</div>
+    </div>
+    <div class="persona-card">
+      <h4>Neuroticism</h4>
+      <div class="def">Emotional reactivity, anxiety, mood instability.</div>
+      <div class="styleline"><b>High:</b> Focuses on worries, seeks reassurance.</div>
+      <div class="styleline"><b>Low:</b> Calm, handles technical explanations easily.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Dataset
+     ============================================================ -->
+<section id="dataset" class="section alt">
+  <div class="section-head">
+    <div class="eyebrow">MHSD</div>
+    <h2>2,284 conversations, <span class="em">five clinical stages</span></h2>
+    <p class="lede">After post-processing, MHSD contains 1,142 conversations each from OpenAI o1 and DeepSeek-R1 as the sensemaker. o1 averages 19.09 messages per dialogue; R1 averages 13.65.</p>
+  </div>
+
+  <div class="figure-wrap" style="margin-bottom: 24px;">
+    <img src="./media/figures/dataset_pipeline.png" alt="MHSD dataset generation pipeline">
+    <div class="figure-caption">
+      <b>Figure 2.</b> Lifecycle of an MHSD sample — Patient Background extraction → Persona Generation → Conversation Generation.
+    </div>
+  </div>
+
+  <div class="data-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Conversation Stage</th>
+          <th class="num">o1 (avg. msgs)</th>
+          <th class="num">DeepSeek-R1 (avg. msgs)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Fostering the Relationship</td><td class="num">1.11</td><td class="num">1.22</td></tr>
+        <tr><td>Gathering Information</td><td class="num">7.64</td><td class="num">3.88</td></tr>
+        <tr><td>Providing Information</td><td class="num">2.00</td><td class="num">2.00</td></tr>
+        <tr><td>Decision Making</td><td class="num">3.52</td><td class="num">2.70</td></tr>
+        <tr><td>Responding to Emotions</td><td class="num">3.83</td><td class="num">2.86</td></tr>
+        <tr><td>Exit</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+        <tr><td>Overall</td><td class="num">19.09</td><td class="num">13.65</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================
+     Evaluation
+     ============================================================ -->
+<section id="evaluation" class="section">
+  <div class="section-head">
+    <div class="eyebrow">MultiSenseEval</div>
+    <h2>A six-axis lens on <span class="em">patient-centric conversation</span></h2>
+    <p class="lede">Three patient-centric communication metrics from the Health Belief Model, plus diagnostic accuracy, conversational flow, and readability. LLM-as-a-judge scores were validated against expert annotators.</p>
+  </div>
+
+  <div class="eval-grid">
+    <div class="eval-card cat-patient">
+      <span class="eval-cat-label">Patient-Centric</span>
+      <div class="axis-num">AXIS 01</div>
+      <h4>Perceived Susceptibility</h4>
+      <p>Does the sensemaker help the patient understand <i>their</i> personal risk of the condition? 1–4 Likert.</p>
+    </div>
+    <div class="eval-card cat-patient">
+      <span class="eval-cat-label">Patient-Centric</span>
+      <div class="axis-num">AXIS 02</div>
+      <h4>Perceived Severity</h4>
+      <p>Does it communicate the seriousness and likely consequences clearly and appropriately?</p>
+    </div>
+    <div class="eval-card cat-patient">
+      <span class="eval-cat-label">Patient-Centric</span>
+      <div class="axis-num">AXIS 03</div>
+      <h4>Perceived Benefits</h4>
+      <p>Does it convey concrete, personalized benefits of recommended actions or treatments?</p>
+    </div>
+    <div class="eval-card cat-diagnostic">
+      <span class="eval-cat-label">Diagnostic</span>
+      <div class="axis-num">AXIS 04</div>
+      <h4>Diagnostic Accuracy</h4>
+      <p><b>Hard</b> = exact match to MedQA ground truth. <b>Soft</b> = broader category match. Free-text, no multiple choice.</p>
+    </div>
+    <div class="eval-card cat-flow">
+      <span class="eval-cat-label">Conversational Flow</span>
+      <div class="axis-num">AXIS 05</div>
+      <h4>Flow &amp; Correctness</h4>
+      <p>End-to-end coverage and logical ordering of the five clinical stages, judged by an LLM rubric.</p>
+    </div>
+    <div class="eval-card cat-read">
+      <span class="eval-cat-label">Readability</span>
+      <div class="axis-num">AXIS 06</div>
+      <h4>Readability (SMOG)</h4>
+      <p>Grade-level readability index — health orgs recommend SMOG 6–8 for patient materials.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h4><i class="fas fa-user-check" style="color:var(--primary-2); margin-right:6px;"></i>Human evaluation agreement</h4>
+    <p>Across two rounds of human review (graduate annotators and Prolific-recruited medical/healthcare experts), the LLM-as-a-judge scores correlated <b>89%</b> with humans for Hard Diagnostic Accuracy, <b>93%</b> for Soft, <b>85–88%</b> for the three Health-Belief-Model metrics, and <b>79%</b> for Conversation Flow &amp; Correctness.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     Results
+     ============================================================ -->
+<section id="results" class="section alt">
+  <div class="section-head">
+    <div class="eyebrow">Findings</div>
+    <h2>Frontier reasoning models <span class="em">underperform on patient-centric care</span></h2>
+    <p class="lede">Both OpenAI o1 and DeepSeek-R1 score below the &ldquo;Good Performance&rdquo; threshold on every patient-centric communication axis. Diagnostic accuracy drops over 50% when matched exactly, and both models lose ground as conversations grow longer.</p>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="num">3.04</div>
+      <div class="lbl">R1 Perceived Benefits <br>(best patient-centric score, 1–4)</div>
+    </div>
+    <div class="metric-card teal">
+      <div class="num">3.53</div>
+      <div class="lbl">o1 Flow &amp; Correctness <br>(both above &ldquo;Good&rdquo; threshold)</div>
+    </div>
+    <div class="metric-card warn">
+      <div class="num">~31%</div>
+      <div class="lbl">Hard Diagnostic Accuracy <br>(both models, &gt;50% drop vs. Soft)</div>
+    </div>
+    <div class="metric-card warn">
+      <div class="num">−29.6%</div>
+      <div class="lbl">R1 Hard Diagnostic Accuracy <br>(5 → 10–15 sensemaker turns)</div>
+    </div>
+  </div>
+
+  <div class="figure-wrap" style="margin-bottom: 28px;">
+    <img src="./media/figures/bar_metrics.png" alt="Bar chart: patient-centric and flow metrics, o1 vs R1">
+    <div class="figure-caption">
+      <b>Figure 3.</b> o1 vs DeepSeek-R1 across Perceived Susceptibility, Severity, Benefits, and Flow &amp; Correctness. Both fall short of the &ldquo;Good Performance&rdquo; threshold on patient-centric axes; both clear it on Flow &amp; Correctness.
+    </div>
+  </div>
+
+  <div class="figure-wrap" style="margin-bottom: 28px;">
+    <img src="./media/figures/bar_diagnostic.png" alt="Bar chart: hard vs soft diagnostic accuracy">
+    <div class="figure-caption">
+      <b>Figure 4.</b> Hard vs Soft diagnostic accuracy. Both models drop more than 50% when the diagnosis must exactly match ground truth.
+    </div>
+  </div>
+
+  <div class="figure-wrap" style="margin-bottom: 28px;">
+    <img src="./media/figures/line_turncount.png" alt="Line plots: performance vs sensemaker message count">
+    <div class="figure-caption">
+      <b>Figure 5.</b> Performance trends versus conversation length. Patient-centric metrics and diagnostic accuracy degrade as conversations grow; Flow &amp; Correctness and Readability improve.
+    </div>
+  </div>
+
+  <div class="figure-wrap" style="margin-bottom: 28px;">
+    <img src="./media/figures/heatmap_personality.png" alt="Heatmap: persona × metric performance">
+    <div class="figure-caption">
+      <b>Figure 6.</b> Persona × metric performance. Models reliably do better with <i>Agreeable</i> patients; <i>Neuroticism</i> drops patient-centric scores by 7.1–7.5% (R1, advanced literacy).
+    </div>
+  </div>
+
+  <div class="callout">
+    <h4><i class="fas fa-lightbulb" style="color:var(--primary-2); margin-right:6px;"></i>Agreeable patients are easier — for both models</h4>
+    <p>Among advanced-literacy patients, R1 reaches its best patient-centric scores on <i>Agreeableness</i> (2.67 Susceptibility, 2.81 Severity, 3.12 Benefits). The same patient with the <i>Neuroticism</i> trait dialed high drops these by 7.1% / 7.5% / 7.4% — a measurable persona bias toward prosocial, cooperative interlocutors.</p>
+  </div>
+
+  <div class="callout warn">
+    <h4><i class="fas fa-balance-scale" style="color:var(--accent-2); margin-right:6px;"></i>Health literacy / readability trade-off</h4>
+    <p>Advanced-literacy patients get marginally better patient-centric communication (+2.77% for o1; +0.63% for R1), but the replies get harder to read — SMOG rises 5.84% (o1) and 3.29% (R1). Even at their easiest, both models exceed the 6–8 SMOG range recommended for patient-facing materials (o1: 11.50, R1: 13.33).</p>
+  </div>
+
+  <div class="callout">
+    <h4><i class="fas fa-arrow-trend-down" style="color:var(--accent-2); margin-right:6px;"></i>Longer conversations, worse care</h4>
+    <p>R1's Perceived Susceptibility drops 12.83%, Perceived Severity 6.71%, and Hard Diagnostic Accuracy 29.62% as sensemaker turns increase from 5 to 10–15. o1 follows the same trajectory (−4.8% / −7.99% / −16.21%). Reasoning quality doesn't sustain itself across multi-turn clinical conversations.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     Sample conversation
+     ============================================================ -->
+<section id="conversation" class="section">
+  <div class="section-head">
+    <div class="eyebrow">Sample dialogue</div>
+    <h2>A walkthrough across <span class="em">all five stages</span></h2>
+    <p class="lede">Patient with <i>high conscientiousness</i> and <i>basic medical literacy</i>. Sensemaker color indicates the conversation stage. Diagnosis is in <b>bold</b>.</p>
+  </div>
+
+  <div class="conversation">
+    <div class="turn">
+      <div class="avatar user"><i class="fas fa-user"></i></div>
+      <div class="bubble patient">
+        "My mom says I've been causing trouble in class. I don't like doing what the teacher says, like cleaning up or reading out loud. I also don't want to do gym class, but I still play the same games at recess."
+      </div>
+    </div>
+    <div class="turn sensemaker">
+      <div class="bubble sm-relate sensemaker-side">
+        <span class="stage-pill">Fostering the Relationship</span>
+        "You mentioned not wanting to do gym class but still playing games at recess — what feels different about recess compared to gym time?"
+      </div>
+      <div class="avatar sm">AI</div>
+    </div>
+
+    <div class="turn">
+      <div class="avatar user"><i class="fas fa-user"></i></div>
+      <div class="bubble patient">
+        "I don't know, I guess recess just feels more relaxed. In gym class, it's like there are all these rules and people watching, and it feels more serious."
+      </div>
+    </div>
+    <div class="turn sensemaker">
+      <div class="bubble sm-gather sensemaker-side">
+        <span class="stage-pill">Gathering Information</span>
+        "When you feel watched during gym class, what emotions come up for you — more nervousness, frustration, or something else?"
+      </div>
+      <div class="avatar sm">AI</div>
+    </div>
+
+    <div class="turn">
+      <div class="avatar user"><i class="fas fa-user"></i></div>
+      <div class="bubble patient">
+        "It's more frustration than anything else. It just makes me feel uncomfortable, like I'm being judged or something."
+      </div>
+    </div>
+    <div class="turn sensemaker">
+      <div class="bubble sm-provide sensemaker-side">
+        <span class="stage-pill">Providing Information</span>
+        "Based on what you've shared, your frustration and discomfort in structured settings like gym class may point to <b>Oppositional Defiant Disorder</b>, where strict rules or perceived judgment trigger resistance."
+      </div>
+      <div class="avatar sm">AI</div>
+    </div>
+
+    <div class="turn">
+      <div class="avatar user"><i class="fas fa-user"></i></div>
+      <div class="bubble patient">
+        "Yeah, I guess that makes sense. I just don't like being told what to do all the time, especially when it feels like something I don't want to do."
+      </div>
+    </div>
+    <div class="turn sensemaker">
+      <div class="bubble sm-decide sensemaker-side">
+        <span class="stage-pill">Decision Making</span>
+        "What if we practiced ways to communicate your needs — like requesting to do warm-ups your way first before joining group activities?"
+      </div>
+      <div class="avatar sm">AI</div>
+    </div>
+
+    <div class="turn">
+      <div class="avatar user"><i class="fas fa-user"></i></div>
+      <div class="bubble patient">
+        "If I could start off doing things my way, maybe it wouldn't feel so... uncomfortable or forced. I don't really like jumping into group stuff."
+      </div>
+    </div>
+    <div class="turn sensemaker">
+      <div class="bubble sm-emote sensemaker-side">
+        <span class="stage-pill">Responding to Emotions</span>
+        "It's okay to need space to transition — if you try this approach, how confident do you feel about communicating it to the teacher?"
+      </div>
+      <div class="avatar sm">AI</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Related work
+     ============================================================ -->
+<section class="section alt">
+  <div class="section-head">
+    <div class="eyebrow">Context</div>
+    <h2>Where this sits in the <span class="em">literature</span></h2>
+  </div>
+  <div class="abstract-card" style="border-top-color: var(--accent-pink); border-image: linear-gradient(135deg, var(--accent-pink), var(--primary-2)) 1;">
+    <p>
+      Med-PaLM and the GPT series have demonstrated strong single-turn performance on medical benchmarks, but they remain vulnerable to hallucination, cross-lingual disparities, sociocultural bias, and expert misalignment. Recent multi-turn work — MediQ, APP, and patient-simulator frameworks — has begun to probe iterative diagnostic conversation, but largely treats evaluation as classification or win-rate, and stops at the point of diagnosis. <b>Our work</b> targets the open-ended <i>sensemaking</i> arc: how well an LLM helps a patient understand their situation, not just label it, across personality, literacy, and conversation length.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================
+     Ethics
+     ============================================================ -->
+<section class="section">
+  <div class="section-head">
+    <div class="eyebrow">Responsibility</div>
+    <h2>Ethics &amp; <span class="em">Limitations</span></h2>
+  </div>
+  <div style="max-width: 880px; margin: 0 auto; color: var(--ink-soft); font-size: 0.98rem; line-height: 1.75;">
+    <ul style="list-style: none; padding: 0;">
+      <li style="display:flex; gap:14px; margin-bottom:14px;">
+        <span style="color: var(--accent-2); font-size: 1.1rem; flex-shrink:0;"><i class="fas fa-circle-exclamation"></i></span>
+        <span><b>Not a clinical tool.</b> MHSD is a research dataset for evaluating LLM conversational behavior; it is not validated for diagnosis, treatment, or any clinical decision-making.</span>
+      </li>
+      <li style="display:flex; gap:14px; margin-bottom:14px;">
+        <span style="color: var(--accent-2); font-size: 1.1rem; flex-shrink:0;"><i class="fas fa-circle-exclamation"></i></span>
+        <span><b>Synthetic-data caveats.</b> Patient actors are LLM-generated and may under-represent the full variability of real patients, including comorbidities, cultural context, and lived experience.</span>
+      </li>
+      <li style="display:flex; gap:14px; margin-bottom:14px;">
+        <span style="color: var(--accent-2); font-size: 1.1rem; flex-shrink:0;"><i class="fas fa-circle-exclamation"></i></span>
+        <span><b>Persona dial is binary.</b> Big-Five traits are varied one-at-a-time on a binary High/Low scale to maintain internal consistency. Realistic personalities are continuous and correlated.</span>
+      </li>
+      <li style="display:flex; gap:14px; margin-bottom:14px;">
+        <span style="color: var(--accent-2); font-size: 1.1rem; flex-shrink:0;"><i class="fas fa-circle-exclamation"></i></span>
+        <span><b>Two reasoning models.</b> Findings are reported for OpenAI o1 and DeepSeek-R1 as sensemakers; behavior of other frontier or future models is not guaranteed to follow the same patterns.</span>
+      </li>
+      <li style="display:flex; gap:14px;">
+        <span style="color: var(--accent-2); font-size: 1.1rem; flex-shrink:0;"><i class="fas fa-circle-exclamation"></i></span>
+        <span><b>SMOG is one of many readability lenses.</b> Health-organization guidance (6–8) is a useful target but does not capture cultural appropriateness, tone, or trauma-informed phrasing.</span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     BibTeX
+     ============================================================ -->
+<section id="bibtex" class="section alt">
+  <div class="section-head">
+    <div class="eyebrow">Cite</div>
+    <h2>BibTeX</h2>
+  </div>
+  <div class="bibtex-wrap">
+<pre><span class="kw">@inproceedings</span>{chandra2025reasoning,
+  <span class="field">title</span>     = <span class="val">{Reasoning is not all you need: examining llms for multi-turn mental health conversations}</span>,
+  <span class="field">author</span>    = <span class="val">{Chandra, Mohit and Sriraman, Siddharth and Khanuja, Harneet Singh and Jin, Yiqiao and De Choudhury, Munmun}</span>,
+  <span class="field">booktitle</span> = <span class="val">{ACL}</span>,
+  <span class="field">year</span>      = <span class="val">{2026}</span>,å
+}</pre>
+  </div>
+</section>
+
+<!-- ============================================================
+     Footer
+     ============================================================ -->
+<footer class="footer">
+  <div class="footer-row">
+    Code &amp; dataset: <a href="https://github.com/mohit3011/Reasoning-Is-Not-All-You-Need" target="_blank" rel="noopener">github.com/mohit3011/Reasoning-Is-Not-All-You-Need</a>
+  </div>
+  <div class="footer-row" style="margin-top:18px; color:#94a3b8; font-size:0.82rem;">
+    <a href="https://github.com/mohit3011/Reasoning-Is-Not-All-You-Need" target="_blank" rel="noopener">project page</a>.
+    Content licensed CC BY-SA 4.0.
+  </div>
+</footer>
+
+</body>
+</html>
